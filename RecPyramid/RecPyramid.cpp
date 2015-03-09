@@ -1,11 +1,11 @@
-/****************************************************
+/******************************************************
 *
 *    Author: Tianhao Wang
-*    Date: 2015-03-08
-*    Desc: 绘制了一个简单的四棱锥。
+*    Date: 2015-03-09
+*    Desc: 绘制了一个简单的四棱锥，并尝试使用了HLSL。
 *    W、S键控制摄影机距离，移动鼠标以改变观察视角。
 *
-*****************************************************/ 
+*******************************************************/ 
 #include "d3d9App.h"
 #include "DirectInput.h"
 #include "Vertex.h"
@@ -20,11 +20,15 @@ public:
     void UpdateScene(float dt); // 更新绘制方式
     void SetViewMatrix();       // 设置观察矩阵
     void SetProjMatrix();       // 设置投影矩阵
-    void BuildVertexBuffer();   // 设置顶点缓存
-    void BuildIndexBuffer();    // 设置索引缓存
+	void BuildRecPyramid();      // 描绘四棱锥
+	void BuildShaderFile();     // 设置顶点着色器
 private:
     IDirect3DVertexBuffer9* m_vertexBuffer;
     IDirect3DIndexBuffer9 * m_indexBuffer;
+
+	ID3DXEffect           * m_shaderFile; // 用于执行Shader的相关操作
+	D3DXHANDLE              m_hTech;      // Technique句柄
+	D3DXHANDLE              m_hWVP;       // fx文件和C++程序交流的通道
 
     float m_CameraDist;      // 摄影机和原点的距离
     float m_CameraRotationY; // 摄影机和Y轴的夹角
@@ -55,12 +59,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, PSTR, int)
 RecPyramid::RecPyramid(HINSTANCE hInstance, std::string winTitle, D3DDEVTYPE devType, DWORD vertexProc)
 : d3d9App(hInstance, winTitle, devType, vertexProc)
 {
-    BuildVertexBuffer();
-    BuildIndexBuffer();
-
     m_CameraDist = 5.0f;
     m_CameraRotationY = 0.0f;
     m_CameraHeight = 5.0f;
+
+	BuildShaderFile();
+	BuildRecPyramid();
 
     SetProjMatrix(); // 投影矩阵只需设置一次
     InitCVertex();
@@ -69,59 +73,75 @@ RecPyramid::RecPyramid(HINSTANCE hInstance, std::string winTitle, D3DDEVTYPE dev
 // 清理接口
 RecPyramid::~RecPyramid()
 {
+	ReleaseCOM(m_shaderFile);
     ReleaseCOM(m_vertexBuffer);
     ReleaseCOM(m_indexBuffer);
     DeleCVertex();
 }
 
-// 设置顶点缓存
-void RecPyramid::BuildVertexBuffer()
+// 设置四棱锥的顶点缓存和索引缓存
+void RecPyramid::BuildRecPyramid()
 {
-    HR(g_pd3dDevice->CreateVertexBuffer(5 * sizeof(CVertex),
-                                        D3DUSAGE_WRITEONLY,
-                                        0,
-                                        D3DPOOL_MANAGED,
-                                        &m_vertexBuffer,
-                                        0));
-    CVertex* p_vertex;
-    HR(m_vertexBuffer->Lock(0, 0, (void**)&p_vertex, 0));
+	HR(g_pd3dDevice->CreateVertexBuffer(5 * sizeof(CVertex),
+										D3DUSAGE_WRITEONLY,
+										0,
+										D3DPOOL_MANAGED,
+										&m_vertexBuffer,
+										0));
+	CVertex* p_vertex;
+	HR(m_vertexBuffer->Lock(0, 0, (void**)&p_vertex, 0));
 
-    p_vertex[0] = CVertex( 1.0f, -1.0f,  1.0f);
-    p_vertex[1] = CVertex( 1.0f, -1.0f, -1.0f);
-    p_vertex[2] = CVertex(-1.0f, -1.0f, -1.0f);
-    p_vertex[3] = CVertex(-1.0f, -1.0f,  1.0f);
-    p_vertex[4] = CVertex( 0.0f,  1.0f,  0.0f);
+	p_vertex[0] = CVertex( 1.0f, -1.0f,  1.0f);
+	p_vertex[1] = CVertex( 1.0f, -1.0f, -1.0f);
+	p_vertex[2] = CVertex(-1.0f, -1.0f, -1.0f);
+	p_vertex[3] = CVertex(-1.0f, -1.0f,  1.0f);
+	p_vertex[4] = CVertex( 0.0f,  1.0f,  0.0f);
 
-    HR(m_vertexBuffer->Unlock());
+	HR(m_vertexBuffer->Unlock());
+
+	HR(g_pd3dDevice->CreateIndexBuffer(18 * sizeof(WORD),
+									   D3DUSAGE_WRITEONLY,
+									   D3DFMT_INDEX16,
+									   D3DPOOL_MANAGED,
+									   &m_indexBuffer,
+									   0));
+	WORD* p_index;
+	HR(m_indexBuffer->Lock(0, 0, (void**)&p_index, 0));
+
+	// Direct3D认为顶点排列顺序为顺时针（观察坐标系中）的三角元是正面朝向
+	// 顶点排列顺序为逆时针的三角形为背面朝向
+	// Direct3D会遮蔽背面朝向的多边形，这称为背面消隐
+	// 底面
+	p_index[0]  = 0; p_index[1]  = 2; p_index[2]  = 1;
+	p_index[3]  = 2; p_index[4]  = 0; p_index[5]  = 3;
+
+	// 前、后、左、右
+	p_index[6]  = 3; p_index[7]  = 0; p_index[8]  = 4;
+	p_index[9]  = 1; p_index[10] = 2; p_index[11] = 4;
+	p_index[12] = 0; p_index[13] = 1; p_index[14] = 4;
+	p_index[15] = 2; p_index[16] = 3; p_index[17] = 4;
+
+	HR(m_indexBuffer->Unlock());
 }
 
-// 设置索引缓存
-void RecPyramid::BuildIndexBuffer()
+// 设置顶点着色器
+void RecPyramid::BuildShaderFile()
 {
-    HR(g_pd3dDevice->CreateIndexBuffer(18 * sizeof(WORD),
-                                       D3DUSAGE_WRITEONLY,
-                                       D3DFMT_INDEX16,
-                                       D3DPOOL_MANAGED,
-                                       &m_indexBuffer,
-                                       0));
-    WORD* p_index;
-    HR(m_indexBuffer->Lock(0, 0, (void**)&p_index, 0));
+	ID3DXBuffer* errors = 0;
+	HR(D3DXCreateEffectFromFile(g_pd3dDevice,
+								"transform.fx",
+								0,
+								0,
+								D3DXSHADER_DEBUG,
+								0,
+								&m_shaderFile,
+								&errors));
+	if (errors)
+		MessageBox(0, (char*)errors->GetBufferPointer(), 0, 0);
 
-    // Direct3D认为顶点排列顺序为顺时针（观察坐标系中）的三角元是正面朝向
-    // 顶点排列顺序为逆时针的三角形为背面朝向
-    // Direct3D会遮蔽背面朝向的多边形，这称为背面消隐
-
-    // 底面
-    p_index[0]  = 0; p_index[1]  = 2; p_index[2]  = 1;
-    p_index[3]  = 2; p_index[4]  = 0; p_index[5]  = 3;
-
-    // 前、后、左、右
-    p_index[6]  = 3; p_index[7]  = 0; p_index[8]  = 4;
-    p_index[9]  = 1; p_index[10] = 2; p_index[11] = 4;
-    p_index[12] = 0; p_index[13] = 1; p_index[14] = 4;
-    p_index[15] = 2; p_index[16] = 3; p_index[17] = 4;
-
-    HR(m_indexBuffer->Unlock());
+	// 按函数和变量的名字来获得句柄
+	m_hTech = m_shaderFile->GetTechniqueByName("TransformTech");
+	m_hWVP  = m_shaderFile->GetParameterByName(0, "gWVP");
 }
 
 // 设置投影矩阵
@@ -188,16 +208,17 @@ void RecPyramid::DrawScene()
     // 声明顶点的组成结构
     HR(g_pd3dDevice->SetVertexDeclaration(CVertex::m_verDecl));
 
-    D3DXMATRIX world;
-    D3DXMatrixIdentity(&world);
-    HR(g_pd3dDevice->SetTransform(D3DTS_WORLD, &world));
-    HR(g_pd3dDevice->SetTransform(D3DTS_VIEW, &m_viewMatrix));
-    HR(g_pd3dDevice->SetTransform(D3DTS_PROJECTION, &m_projMatrix));
+	HR(m_shaderFile->SetTechnique(m_hTech));
+	HR(m_shaderFile->SetMatrix(m_hWVP, &(m_viewMatrix * m_projMatrix)));
 
-    // 线填充，只绘制线条
-    HR(g_pd3dDevice->SetRenderState(D3DRS_FILLMODE, D3DFILL_WIREFRAME));
-    HR(g_pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 0, 5, 0, 6));
-
+	UINT numPasses = 0;
+	HR(m_shaderFile->Begin(&numPasses, 0));
+	for (UINT i = 0; i < numPasses; ++i) {
+		HR(m_shaderFile->BeginPass(i));
+		HR(g_pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 0, 5, 0, 6));
+		HR(m_shaderFile->EndPass());
+	}
+	HR(m_shaderFile->End());
     HR(g_pd3dDevice->EndScene());
     // 提交后台缓存
     HR(g_pd3dDevice->Present(0, 0, 0, 0));
