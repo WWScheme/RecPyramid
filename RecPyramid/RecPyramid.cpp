@@ -1,11 +1,11 @@
-/****************************************************
+/********************************************************
 *
 *    Author: Tianhao Wang
 *    Date: 2015-03-08
-*    Desc: »æÖÆÁËÒ»¸ö¼òµ¥µÄËÄÀâ×¶¡£
-*    W¡¢S¼ü¿ØÖÆÉãÓ°»ú¾àÀë£¬ÒÆ¶¯Êó±êÒÔ¸Ä±ä¹Û²ìÊÓ½Ç¡£
+*    Desc: ç»˜åˆ¶äº†ä¸€ä¸ªç®€å•çš„å››æ£±é”¥ã€‚
+*          Wã€Sé”®æ§åˆ¶æ‘„å½±æœºè·ç¦»ï¼Œç§»åŠ¨é¼ æ ‡ä»¥æ”¹å˜è§‚å¯Ÿè§†è§’ã€‚
 *
-*****************************************************/ 
+*********************************************************/ 
 #include "d3d9App.h"
 #include "DirectInput.h"
 #include "Vertex.h"
@@ -16,25 +16,25 @@ public:
     RecPyramid(HINSTANCE hInstance, std::string winTitle, D3DDEVTYPE devType, DWORD vertexProc);
     ~RecPyramid();
 
-    void DrawScene();           // äÖÈ¾³¡¾°
-    void UpdateScene(float dt); // ¸üĞÂ»æÖÆ·½Ê½
-    void SetViewMatrix();       // ÉèÖÃ¹Û²ì¾ØÕó
-    void SetProjMatrix();       // ÉèÖÃÍ¶Ó°¾ØÕó
-    void BuildVertexBuffer();   // ÉèÖÃ¶¥µã»º´æ
-    void BuildIndexBuffer();    // ÉèÖÃË÷Òı»º´æ
+    void DrawScene();           // æ¸²æŸ“åœºæ™¯
+    void UpdateScene(float dt); // æ›´æ–°ç»˜åˆ¶æ–¹å¼
+    void SetViewMatrix();       // è®¾ç½®è§‚å¯ŸçŸ©é˜µ
+    void SetProjMatrix();       // è®¾ç½®æŠ•å½±çŸ©é˜µ
+    void BuildVertexBuffer();   // è®¾ç½®é¡¶ç‚¹ç¼“å­˜
+    void BuildIndexBuffer();    // è®¾ç½®ç´¢å¼•ç¼“å­˜
 private:
     IDirect3DVertexBuffer9* m_vertexBuffer;
     IDirect3DIndexBuffer9 * m_indexBuffer;
 
-    float m_CameraDist;      // ÉãÓ°»úºÍÔ­µãµÄ¾àÀë
-    float m_CameraRotationY; // ÉãÓ°»úºÍYÖáµÄ¼Ğ½Ç
-    float m_CameraHeight;    // ÉãÓ°»úµÄ¸ß¶È
+    float m_CameraDist;      // æ‘„å½±æœºå’ŒåŸç‚¹çš„è·ç¦»
+    float m_CameraRotationY; // æ‘„å½±æœºå’ŒYè½´çš„å¤¹è§’
+    float m_CameraHeight;    // æ‘„å½±æœºçš„é«˜åº¦
     
     D3DXMATRIX m_viewMatrix;
     D3DXMATRIX m_projMatrix;
 };
 
-// Ö÷º¯Êı
+// ä¸»å‡½æ•°
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, PSTR, int)
 {
     #if defined(DEBUG) | defined(_DEBUG)
@@ -51,7 +51,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, PSTR, int)
     return g_pd3d9App->MsgLoop();
 }
 
-// ÀàµÄ³õÊ¼»¯
+// ç±»çš„åˆå§‹åŒ–
 RecPyramid::RecPyramid(HINSTANCE hInstance, std::string winTitle, D3DDEVTYPE devType, DWORD vertexProc)
 : d3d9App(hInstance, winTitle, devType, vertexProc)
 {
@@ -62,11 +62,11 @@ RecPyramid::RecPyramid(HINSTANCE hInstance, std::string winTitle, D3DDEVTYPE dev
     m_CameraRotationY = 0.0f;
     m_CameraHeight = 5.0f;
 
-    SetProjMatrix(); // Í¶Ó°¾ØÕóÖ»ĞèÉèÖÃÒ»´Î
+    SetProjMatrix(); // æŠ•å½±çŸ©é˜µåªéœ€è®¾ç½®ä¸€æ¬¡
     InitCVertex();
 }
 
-// ÇåÀí½Ó¿Ú
+// æ¸…ç†æ¥å£
 RecPyramid::~RecPyramid()
 {
     ReleaseCOM(m_vertexBuffer);
@@ -74,7 +74,7 @@ RecPyramid::~RecPyramid()
     DeleCVertex();
 }
 
-// ÉèÖÃ¶¥µã»º´æ
+// è®¾ç½®é¡¶ç‚¹ç¼“å­˜
 void RecPyramid::BuildVertexBuffer()
 {
     HR(g_pd3dDevice->CreateVertexBuffer(5 * sizeof(CVertex),
@@ -95,7 +95,7 @@ void RecPyramid::BuildVertexBuffer()
     HR(m_vertexBuffer->Unlock());
 }
 
-// ÉèÖÃË÷Òı»º´æ
+// è®¾ç½®ç´¢å¼•ç¼“å­˜
 void RecPyramid::BuildIndexBuffer()
 {
     HR(g_pd3dDevice->CreateIndexBuffer(18 * sizeof(WORD),
@@ -107,15 +107,15 @@ void RecPyramid::BuildIndexBuffer()
     WORD* p_index;
     HR(m_indexBuffer->Lock(0, 0, (void**)&p_index, 0));
 
-    // Direct3DÈÏÎª¶¥µãÅÅÁĞË³ĞòÎªË³Ê±Õë£¨¹Û²ì×ø±êÏµÖĞ£©µÄÈı½ÇÔªÊÇÕıÃæ³¯Ïò
-    // ¶¥µãÅÅÁĞË³ĞòÎªÄæÊ±ÕëµÄÈı½ÇĞÎÎª±³Ãæ³¯Ïò
-    // Direct3D»áÕÚ±Î±³Ãæ³¯ÏòµÄ¶à±ßĞÎ£¬Õâ³ÆÎª±³ÃæÏûÒş
+    // Direct3Dè®¤ä¸ºé¡¶ç‚¹æ’åˆ—é¡ºåºä¸ºé¡ºæ—¶é’ˆï¼ˆè§‚å¯Ÿåæ ‡ç³»ä¸­ï¼‰çš„ä¸‰è§’å…ƒæ˜¯æ­£é¢æœå‘
+    // é¡¶ç‚¹æ’åˆ—é¡ºåºä¸ºé€†æ—¶é’ˆçš„ä¸‰è§’å½¢ä¸ºèƒŒé¢æœå‘
+    // Direct3Dä¼šé®è”½èƒŒé¢æœå‘çš„å¤šè¾¹å½¢ï¼Œè¿™ç§°ä¸ºèƒŒé¢æ¶ˆéš
 
-    // µ×Ãæ
+    // åº•é¢
     p_index[0]  = 0; p_index[1]  = 2; p_index[2]  = 1;
     p_index[3]  = 2; p_index[4]  = 0; p_index[5]  = 3;
 
-    // Ç°¡¢ºó¡¢×ó¡¢ÓÒ
+    // å‰ã€åã€å·¦ã€å³
     p_index[6]  = 3; p_index[7]  = 0; p_index[8]  = 4;
     p_index[9]  = 1; p_index[10] = 2; p_index[11] = 4;
     p_index[12] = 0; p_index[13] = 1; p_index[14] = 4;
@@ -124,7 +124,7 @@ void RecPyramid::BuildIndexBuffer()
     HR(m_indexBuffer->Unlock());
 }
 
-// ÉèÖÃÍ¶Ó°¾ØÕó
+// è®¾ç½®æŠ•å½±çŸ©é˜µ
 void RecPyramid::SetProjMatrix()
 {
     float width  = (float)m_d3dPP.BackBufferWidth;
@@ -136,21 +136,21 @@ void RecPyramid::SetProjMatrix()
                                5000.0f);
 }
 
-// ÉèÖÃ¹Û²ì¾ØÕó
+// è®¾ç½®è§‚å¯ŸçŸ©é˜µ
 void RecPyramid::SetViewMatrix()
 {
-    // ÎÒ±¾À´ÊÔ¹ı°ÑCameraÏà¹ØµÄÈı¸öÀà³ÉÔ±Ìæ»»Îªx¡¢y¡¢z×ø±ê
-    // È»ºó·¢ÏÖ£¬¼ÆËãCamera¾àÀëÊ±ĞèÒª½øĞĞÈı´ÎÆ½·½£¬È»ºóÔÙ¿ª¸ùºÅ
-    // ÓÚÊÇÑØÓÃÁËFRANK D.LUNAµÄ×ö·¨
+    // æˆ‘æœ¬æ¥è¯•è¿‡æŠŠCameraç›¸å…³çš„ä¸‰ä¸ªç±»æˆå‘˜æ›¿æ¢ä¸ºxã€yã€zåæ ‡
+    // ç„¶åå‘ç°ï¼Œè®¡ç®—Cameraè·ç¦»æ—¶éœ€è¦è¿›è¡Œä¸‰æ¬¡å¹³æ–¹ï¼Œç„¶åå†å¼€æ ¹å·
+    // äºæ˜¯æ²¿ç”¨äº†FRANK D.LUNAçš„åšæ³•
     float x = m_CameraDist * cosf(m_CameraRotationY);
     float z = m_CameraDist * sinf(m_CameraRotationY);
-    D3DXVECTOR3 pos(x, m_CameraHeight, z); // ÉãÓ°»úÎ»ÖÃ
-    D3DXVECTOR3 target(0.0f, 0.0f, 0.0f);  // ÉãÓ°»ú¹Û²ìµã
-    D3DXVECTOR3 up(0.0f, 1.0f, 0.0f);      // ÊÀ½ç³¯Ïò£¨Ö¸ÏòÉÏ·½£©
+    D3DXVECTOR3 pos(x, m_CameraHeight, z); // æ‘„å½±æœºä½ç½®
+    D3DXVECTOR3 target(0.0f, 0.0f, 0.0f);  // æ‘„å½±æœºè§‚å¯Ÿç‚¹
+    D3DXVECTOR3 up(0.0f, 1.0f, 0.0f);      // ä¸–ç•Œæœå‘ï¼ˆæŒ‡å‘ä¸Šæ–¹ï¼‰
     D3DXMatrixLookAtLH(&m_viewMatrix, &pos, &target, &up);
 }
 
-// ¸üĞÂ»æÖÆ·½Ê½£¬Õâ´ÎÖ»¸üĞÂÉãÓ°»úÎ»ÖÃ
+// æ›´æ–°ç»˜åˆ¶æ–¹å¼ï¼Œè¿™æ¬¡åªæ›´æ–°æ‘„å½±æœºä½ç½®
 void RecPyramid::UpdateScene(float dt)
 {
     g_pDxInput->GetCurState();
@@ -160,32 +160,32 @@ void RecPyramid::UpdateScene(float dt)
     if (g_pDxInput->KeyPress(DIK_S))
         m_CameraDist += 10.0f * dt;
 
-    // Ê¹ÉãÓ°»ú²»»á½øÈë¼¸ºÎÌåÄÚ²¿
+    // ä½¿æ‘„å½±æœºä¸ä¼šè¿›å…¥å‡ ä½•ä½“å†…éƒ¨
     if (m_CameraDist <= 4.0f)
         m_CameraDist = 4.0f;
 
     m_CameraHeight    += g_pDxInput->MouseY() / 25.0f;
     m_CameraRotationY += g_pDxInput->MouseX() / 50.0f;
 
-    // ½«½Ç¶ÈÏŞÖÆÔÚ360¶È·¶Î§ÄÚ
+    // å°†è§’åº¦é™åˆ¶åœ¨360åº¦èŒƒå›´å†…
     if (fabsf(m_CameraRotationY) >= 2.0f * D3DX_PI) 
         m_CameraRotationY = 0.0f;
 
-    // Ã¿´Î¸üĞÂÉãÓ°»úÎ»ÖÃÖ®ºó£¬¶¼ĞèÒªÖØĞÂÉèÖÃÍ¶Ó°¾ØÕó
+    // æ¯æ¬¡æ›´æ–°æ‘„å½±æœºä½ç½®ä¹‹åï¼Œéƒ½éœ€è¦é‡æ–°è®¾ç½®æŠ•å½±çŸ©é˜µ
     SetViewMatrix();
 }
 
-// ¿ªÊ¼äÖÈ¾
+// å¼€å§‹æ¸²æŸ“
 void RecPyramid::DrawScene()
 {
     HR(g_pd3dDevice->Clear(0, 0, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER,
                            D3DCOLOR_XRGB(255, 255, 255), 1.0f, 0));
     HR(g_pd3dDevice->BeginScene());
     
-    // ½«¶¥µã»º´æ°ó¶¨µ½Á÷
+    // å°†é¡¶ç‚¹ç¼“å­˜ç»‘å®šåˆ°æµ
     HR(g_pd3dDevice->SetStreamSource(0, m_vertexBuffer, 0, sizeof(CVertex)));
     HR(g_pd3dDevice->SetIndices(m_indexBuffer));
-    // ÉùÃ÷¶¥µãµÄ×é³É½á¹¹
+    // å£°æ˜é¡¶ç‚¹çš„ç»„æˆç»“æ„
     HR(g_pd3dDevice->SetVertexDeclaration(CVertex::m_verDecl));
 
     D3DXMATRIX world;
@@ -194,11 +194,11 @@ void RecPyramid::DrawScene()
     HR(g_pd3dDevice->SetTransform(D3DTS_VIEW, &m_viewMatrix));
     HR(g_pd3dDevice->SetTransform(D3DTS_PROJECTION, &m_projMatrix));
 
-    // ÏßÌî³ä£¬Ö»»æÖÆÏßÌõ
+    // çº¿å¡«å……ï¼Œåªç»˜åˆ¶çº¿æ¡
     HR(g_pd3dDevice->SetRenderState(D3DRS_FILLMODE, D3DFILL_WIREFRAME));
     HR(g_pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 0, 5, 0, 6));
 
     HR(g_pd3dDevice->EndScene());
-    // Ìá½»ºóÌ¨»º´æ
+    // æäº¤åå°ç¼“å­˜
     HR(g_pd3dDevice->Present(0, 0, 0, 0));
 }
